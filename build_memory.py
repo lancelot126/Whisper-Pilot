@@ -14,7 +14,7 @@ collection.add(
     documents=[
         "WhisperPilot is a real-time AI assisstant using Deepgram for speech and ChromaDB for memory.",
         "The system uses a v3.11.0 Deepgram SDK with a WebCoket connection for low latency.",
-        "The microphone setting are configured for 15kHz, mono, linear16 encoding."
+        "The microphone setting are configured for 16kHz, mono, linear16 encoding."
     ],
     ids=["doc1", "doc2", "doc3"]
 )
