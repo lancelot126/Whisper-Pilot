@@ -2,9 +2,9 @@ import os
 from dotenv import load_dotenv
 from deepgram import (
     DeepgramClient,
-    DeepgramClientOptions,
     LiveTranscriptionEvents,
-    LiveOptions
+    LiveOptions,
+    Microphone
 )
 import chromadb
 from chromadb.utils import embedding_functions
@@ -14,7 +14,7 @@ load_dotenv()
 # Set up vector database
 client = chromadb.PersistentClient(path="./whisper_memory")
 model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
-collection = get_or_create_collection(name="whisper_docs", embedding_functions=model_ef)
+collection = client.get_collection(name="whisper_docs", embedding_function=model_ef)
 
 def search_memory(text):
     # Turns text into a vector and finds matching text
@@ -36,17 +36,24 @@ def main():
         dg_connection = deepgram.listen.websocket.v("1")
 
         def on_message(self, result, **kwargs):
-            sentence = result.channel.alternatives[0].transcript
-            if len(sentence > 0) and result.is_final:
-                print(f"\n YOU SAID: {sentence}")
+            try:
+                if not result.channel.alternatives:
+                    return
 
-                # Search the database
-                match, distance = search_memory(sentence)
+                sentence = result.channel.alternatives[0].transcript
 
-                if match:
-                    print(f"WHISPERPILOT REMEMBERS: {match} (DISTANCE: {distance:.2f})")
-                else:
-                    print(f"I heard that, but I don't have a specific memory for it.")
+                if result.is_final and sentence.strip():
+                    print(f"\n YOU SAID: {sentence}")
+
+                    # Search the database
+                    match, distance = search_memory(sentence)
+
+                    if match:
+                        print(f"WHISPERPILOT REMEMBERS: {match} (DISTANCE: {distance:.2f})")
+                    else:
+                        print(f"I heard that, but I don't have a specific memory for it.")
+            except Exception as e:
+                print(f"Callback Error: {e}")
 
         dg_connection.on(LiveTranscriptionEvents.Transcript, on_message)
 
@@ -68,7 +75,7 @@ def main():
 
         while True:
             pass
-            
+
     except Exception as e:
         print(f"ErrorL {e}")
 
