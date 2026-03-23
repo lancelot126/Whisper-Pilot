@@ -1,22 +1,52 @@
+import os
 import chromadb
 from chromadb.utils import embedding_functions
 
-# initialize database
-client = chromadb.PersistentClient(path="./whisper_memory")
+DB_PATH = "./whisper_memory"
+COLLECTION_NAME = "whisper_docs"
+EMBED_MODEL = "all-MiniLM-L6-v2"
 
-# Set Translator to turn my audio in vector form
-model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="all-MiniLM-L6-v2")
+def get_collection():
 
-# Create collection
-collection = client.get_or_create_collection(name="whisper_docs", embedding_function=model_ef)
+    # initialize database
+    client = chromadb.PersistentClient(path=DB_PATH)
 
-collection.add(
-    documents=[
-        "WhisperPilot is a real-time AI assisstant using Deepgram for speech and ChromaDB for memory.",
-        "The system uses a v3.11.0 Deepgram SDK with a WebCoket connection for low latency.",
-        "The microphone setting are configured for 16kHz, mono, linear16 encoding."
-    ],
-    ids=["doc1", "doc2", "doc3"]
-)
+    # Set Translator to turn my audio in vector form
+    model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=EMBED_MODEL)
 
-print("WhisperPilot memory initialized.")
+    # Create collection
+    collection = client.get_or_create_collection(name=COLLECTION_NAME embedding_function=model_ef)
+
+    return collection
+
+def ingest_folder(folder_path):
+    # Reads .txt files in a folder and adds them to vector database
+    collection = get_collection()
+
+    if not os.path.exists(folder_path):
+        print(f" Error: Folder '{folder_path}' NOT found.")
+        return
+
+    for filename in os.listdir(folder_path):
+        if filename.endswith(".txt"):
+            file_path = os.path.join(folder_path, filename)
+
+            with open(file_path, 'r', encoding='utf-8') as f:
+                content = f.read()
+
+                collection.upsert(
+                    documents=[content],
+                    ids=[filename],
+                    metadatas=[{"source": filename}]
+                )
+                print(f"Ingested: {filename}")
+
+if __name__ == "__main__":
+    kb_folder = "knowledge_base"
+    if not os.path.exists(kb_folder):
+        os.makedir(kb_folder)
+        print(f"Created '{kb_folder}' folder. Add your .txt files there.")
+    
+    ingest_folder(kb_folder)
+    print("Ingestion complete. Your pilot now has more knowledge")
+    
