@@ -1,2 +1,8 @@
 deepgram-sdk==3.11.0
 python-dotenv==1.2.2
+PyQt6
+chromadb
+sentence-transformers
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch
+pyaudio

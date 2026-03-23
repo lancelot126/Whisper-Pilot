@@ -6,6 +6,8 @@ from deepgram import DeepgramClient, LiveTranscriptionEvents, LiveOptions, Micro
 from dotenv import load_dotenv
 import os
 
+load_dotenv()
+
 # Deepgram and microphone run in the background
 class TranscriptionWorker(QThread):
     # This signal acts as a pipe to send data to the UI
@@ -86,7 +88,7 @@ class WhisperPilotUI(QWidget):
         self.transcript_label = QLabel("Waiting for speech...")
         self.transcript_label.setWordWrap(True)
         self.transcript_label.setStyleSheet("""
-            fonrt-size: 12px;
+            font-size: 12px;
             color: #9ca3af;
             padding: 10px;
             border-top: 1px solid #333;
@@ -107,7 +109,7 @@ class WhisperPilotUI(QWidget):
 
     def update_display(self, transcript, suggestion):
         self.transcript_label.setText(f"{transcript}")
-        self.suggestion_label.setText({suggestion})
+        self.suggestion_label.setText(suggestion)
 
     def mousePressEvent(self, event):
         self.oldPos = event.globalPosition().toPoint()
