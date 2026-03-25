@@ -15,7 +15,7 @@ def get_collection():
     model_ef = embedding_functions.SentenceTransformerEmbeddingFunction(model_name=EMBED_MODEL)
 
     # Create collection
-    collection = client.get_or_create_collection(name=COLLECTION_NAME embedding_function=model_ef)
+    collection = client.get_or_create_collection(name=COLLECTION_NAME, embedding_function=model_ef)
 
     return collection
 

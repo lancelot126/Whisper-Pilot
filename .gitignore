@@ -1,6 +1,5 @@
 # Virtual environments
 venv/
-venv312/
 .venv/
 
 # Python cache/artifacts
@@ -22,3 +21,6 @@ whisper_memory/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Files for the database
+knowledge_base/
