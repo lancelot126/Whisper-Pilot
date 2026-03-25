@@ -1,3 +1,31 @@
+import os
+from groq import Groq
+from dotenv import load_dotenv
+
+load_dotenv()
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+
+def get_chat_response(user_query, retrieved_context):
+    # Sends user's speech and matched memory context to Groq and returns the response
+    try:
+        completion = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=[
+                {
+                    "role": "system",
+                    "content": "You are a helpful AI Co-Pilot. Use the provided context to asnwer the user's question concisely. If the context doesn't help, use your general knowledge, but prioritize the context."
+                },
+                {
+                    "role": "user",
+                    "content": f"Context: {retrieved_context}\n\nUser Question: {user_query}"
+                }
+            ],
+            max_tokens=150
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        return f"LLM Error: {e}"
+    
 try:
     import chromadb
     from chromadb.utils import embedding_functions
@@ -53,3 +81,4 @@ def search_memory(text):
         distance = max(0.05, 1.0 - min(best_overlap / 8.0, 0.95))
         return best_doc, distance
     return None, 1.0
+

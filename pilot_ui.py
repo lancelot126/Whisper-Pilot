@@ -1,7 +1,7 @@
 import sys
 from PyQt6.QtWidgets import QApplication, QWidget, QVBoxLayout, QLabel, QFrame
 from PyQt6.QtCore import Qt, QThread, QPoint, pyqtSignal
-from brain_engine import search_memory
+from brain_engine import search_memory, get_chat_response
 from deepgram import DeepgramClient, LiveTranscriptionEvents, LiveOptions, Microphone
 from dotenv import load_dotenv
 import os
@@ -26,7 +26,10 @@ class TranscriptionWorker(QThread):
                     # Search the database
                     match, distance = search_memory(sentence)
 
-                    display_match = match if distance < 0.7 else "Listening"
+                    if match and distance < 0.7:
+                        display_match = get_chat_response(sentence, match)
+                    else:
+                        display_match = "Listening"
 
                     self.data_received.emit(sentence, display_match)
 
