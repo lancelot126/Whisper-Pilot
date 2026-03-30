@@ -152,7 +152,14 @@ class WhisperPilotUI(QWidget):
                 else:
                     self.suggestion_label.setText("⚠️ Failed to index file.")
                     self.suggestion_label.setStyleSheet("color: #f87171; font-size: 16px;") # Turn red for error
-
+                    
+    def dragEnterEvent(self, event):
+            # This tells Windows "Yes, I am allowed to receive these files"
+            if event.mimeData().hasUrls():
+                event.accept()
+            else:
+                event.ignore()
+                
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     window = WhisperPilotUI()
