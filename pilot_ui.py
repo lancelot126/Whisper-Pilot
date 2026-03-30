@@ -4,6 +4,7 @@ from PyQt6.QtCore import Qt, QThread, QPoint, pyqtSignal
 from brain_engine import search_memory, get_chat_response
 from deepgram import DeepgramClient, LiveTranscriptionEvents, LiveOptions, Microphone
 from dotenv import load_dotenv
+from collections import deque
 import os
 
 load_dotenv()
@@ -14,6 +15,10 @@ class TranscriptionWorker(QThread):
     # Sends user's transcript and AI's memory match
     data_received = pyqtSignal(str, str)
 
+    def __init__(self):
+        super().__init__()
+        self.context_buffer = deque(maxlen=5)
+
     def run(self):
         def on_message(self_dg, result, **kwargs):
             try:
@@ -23,11 +28,16 @@ class TranscriptionWorker(QThread):
                 sentence = result.channel.alternatives[0].transcript
 
                 if result.is_final and sentence.strip():
+                    self.context_buffer.append(sentence)
+
+                    # Combine the last 5 sentences into the context buffer
+                    full_context = " ".join(self.context_buffer)
+                    
                     # Search the database
                     match, distance = search_memory(sentence)
 
                     if match and distance < 0.7:
-                        display_match = get_chat_response(sentence, match)
+                        display_match = get_chat_response(full_context, match)
                     else:
                         display_match = "Listening"
 
