@@ -6,7 +6,7 @@ from deepgram import DeepgramClient, LiveTranscriptionEvents, LiveOptions, Micro
 from dotenv import load_dotenv
 from collections import deque
 import os
-
+from database_manager import ingest_new_file
 load_dotenv()
 
 # Deepgram and microphone run in the background
@@ -32,7 +32,7 @@ class TranscriptionWorker(QThread):
 
                     # Combine the last 5 sentences into the context buffer
                     full_context = " ".join(self.context_buffer)
-                    
+
                     # Search the database
                     match, distance = search_memory(sentence)
 
@@ -131,6 +131,27 @@ class WhisperPilotUI(QWidget):
         delta = QPoint(event.globalPosition().toPoint() - self.oldPos)
         self.move(self.x() + delta.x(), self.y() + delta.y())
         self.oldPos = event.globalPosition().toPoint()
+
+    def dropEvent(self, event):
+        for url in event.mimeData().urls():
+            file_path = url.toLocalFile()
+
+            if file_path.endswith(".txt"):
+                import shutil
+                dest_dir = "knowledge_base"
+                os.makedirs(dest_dir, exist_ok=True)
+                dest_path = os.path.join(dest_dir, os.path.basename(file_path))
+                shutil.copy(file_path, dest_path)
+
+                # Trigger ingestion of the new file
+                success = ingest_new_file(dest_path)
+
+                if success:
+                    self.suggestion_label.setText(f"🧠 Learned: {os.path.basename(file_path)}")
+                    self.suggestion_label.setStyleSheet("color: #4ade80; font-size: 16px;") # Turn green for success
+                else:
+                    self.suggestion_label.setText("⚠️ Failed to index file.")
+                    self.suggestion_label.setStyleSheet("color: #f87171; font-size: 16px;") # Turn red for error
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)

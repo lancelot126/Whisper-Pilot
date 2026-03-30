@@ -41,6 +41,25 @@ def ingest_folder(folder_path):
                 )
                 print(f"Ingested: {filename}")
 
+def ingest_new_file(file_path):
+    # Adds a single file to the existing ChromaDB collection
+    collection = get_collection()
+
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+            # Access your existing collection
+            collection.add(
+                documents=[content],
+                ids=[os.path.basename(file_path)]
+            )
+            print(f"{os.path.basename(file_path)} indexed successfully.")
+            return True
+    except Exception as e:
+        print(f"Ingestion Error: {e}")
+        return False
+    
 if __name__ == "__main__":
     kb_folder = "knowledge_base"
     if not os.path.exists(kb_folder):
